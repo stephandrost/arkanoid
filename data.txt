@@ -1,0 +1,2 @@
+// Voorbeeld:
+score=100
