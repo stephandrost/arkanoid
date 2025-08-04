@@ -4,6 +4,6 @@ module arkanoid {
     exports org.example;
 
     opens backgrounds;
-//    opens audio;
+    opens audio;
     opens fonts;
 }

@@ -1,2 +1,1 @@
-// Voorbeeld:
-score=100
+topScore=1000
