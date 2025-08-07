@@ -37,7 +37,7 @@ public class FileManager {
                 }
             }
         } catch (IOException e) {
-            // File might not exist yet
+            e.printStackTrace();
         }
         return map;
     }

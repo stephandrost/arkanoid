@@ -12,6 +12,6 @@ public class FontManager {
                     size
             );
         }
-        return Font.font(pressStartFont.getName(), size); // Reuse font name with new size
+        return Font.font(pressStartFont.getName(), size);
     }
 }
