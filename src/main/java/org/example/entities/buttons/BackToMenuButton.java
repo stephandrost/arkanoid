@@ -6,26 +6,26 @@ import javafx.scene.paint.Color;
 import org.example.Arkanoid;
 
 /**
- * Button that starts a new game when clicked.
+ * Button that navigates back to the main menu when clicked.
  */
-public class StartButton extends Button {
+public class BackToMenuButton extends Button {
 
     private final Arkanoid arkanoid;
 
     /**
-     * Creates the start button at the given location.
+     * Creates the back-to-menu button at the given location.
      *
      * @param location the position of the button center
      * @param arkanoid the main game instance used to trigger scene transitions
      */
-    public StartButton(Coordinate2D location, Arkanoid arkanoid) {
-        super(location, "Start Game", 32, Color.DEEPSKYBLUE, Color.AQUA);
+    public BackToMenuButton(Coordinate2D location, Arkanoid arkanoid) {
+        super(location, "Back to Menu", 24, Color.WHITE, Color.LIGHTGRAY);
         this.arkanoid = arkanoid;
     }
 
-    /** Starts the game when the button is clicked. */
+    /** Returns to the main menu when the button is clicked. */
     @Override
     public void onMouseButtonPressed(MouseButton button, Coordinate2D coordinate2D) {
-        arkanoid.startGame();
+        arkanoid.goToMainMenu();
     }
 }

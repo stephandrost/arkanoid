@@ -13,17 +13,35 @@ import javafx.scene.paint.Color;
 
 import java.util.Set;
 
+/**
+ * The player-controlled paddle at the bottom of the game field.
+ * <p>
+ * Moves left and right with the arrow keys and stops at the scene borders.
+ * </p>
+ */
 public class Paddle extends DynamicRectangleEntity implements KeyListener, SceneBorderTouchingWatcher, Collider {
 
-    private static final double SPEED = 5.0;
-    private static final double WIDTH = 100;
+    private static final double SPEED = 7.0;
+    /** Width of the paddle, also used by {@link Ball} to calculate bounce angles. */
+    public static final double WIDTH = 90;
     private static final double HEIGHT = 20;
 
+    /**
+     * Creates the paddle at the given position.
+     *
+     * @param initialPosition the starting position of the paddle
+     */
     public Paddle(Coordinate2D initialPosition) {
         super(initialPosition, new Size(WIDTH, HEIGHT));
         setFill(Color.DODGERBLUE);
     }
 
+    /**
+     * Moves the paddle left or right based on the currently pressed keys.
+     * Stops the paddle when no arrow key is held.
+     *
+     * @param pressedKeys the set of keys currently held down
+     */
     @Override
     public void onPressedKeysChange(Set<KeyCode> pressedKeys) {
         if (pressedKeys.contains(KeyCode.LEFT)) {
@@ -35,6 +53,11 @@ public class Paddle extends DynamicRectangleEntity implements KeyListener, Scene
         }
     }
 
+    /**
+     * Stops the paddle and clamps its position when it reaches the left or right border.
+     *
+     * @param border the border that was touched
+     */
     @Override
     public void notifyBoundaryTouching(SceneBorder border) {
         switch (border) {
