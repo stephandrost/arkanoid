@@ -4,6 +4,7 @@ import com.github.hanyaeger.api.Size;
 import com.github.hanyaeger.api.YaegerGame;
 import org.example.scenes.GameLevel;
 import org.example.scenes.GameOverScene;
+import org.example.scenes.LevelSelector;
 import org.example.scenes.MainMenu;
 
 /**
@@ -42,6 +43,7 @@ public class Arkanoid extends YaegerGame {
         mainMenu = new MainMenu(this);
         addScene(0, mainMenu);
         addScene(1, new GameLevel(this));
+        addScene(3, new LevelSelector(this));
     }
 
     /**
@@ -70,5 +72,9 @@ public class Arkanoid extends YaegerGame {
     public void goToMainMenu() {
         mainMenu.restartMusic();
         setActiveScene(0);
+    }
+
+    public void goToLevelSelect() {
+        setActiveScene(3);
     }
 }

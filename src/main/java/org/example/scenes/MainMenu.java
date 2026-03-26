@@ -8,6 +8,7 @@ import com.github.hanyaeger.api.scenes.StaticScene;
 import javafx.scene.paint.Color;
 import org.example.Arkanoid;
 import org.example.entities.buttons.QuitButton;
+import org.example.entities.buttons.SelectLevelButton;
 import org.example.entities.buttons.StartButton;
 import org.example.utils.FileManager;
 import org.example.utils.FontManager;
@@ -77,10 +78,13 @@ public class MainMenu extends StaticScene {
         topScoreText.setAnchorPoint(AnchorPoint.CENTER_CENTER);
         addEntity(topScoreText);
 
-        var startButton = new StartButton(new Coordinate2D(getWidth() / 2, 380), arkanoid);
+        var startButton = new StartButton(new Coordinate2D(getWidth() / 2, 320), arkanoid);
         addEntity(startButton);
 
-        var quitButton = new QuitButton(new Coordinate2D(getWidth() / 2, 450));
+        var SelectLevelButton = new SelectLevelButton(new Coordinate2D(getWidth() / 2, 390), arkanoid);
+        addEntity(SelectLevelButton);
+        
+        var quitButton = new QuitButton(new Coordinate2D(getWidth() / 2, 460));
         addEntity(quitButton);
 
         var credits = new TextEntity(new Coordinate2D(getWidth() / 2, 530), "© HAN 2025");
