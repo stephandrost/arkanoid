@@ -7,16 +7,27 @@ import com.github.hanyaeger.api.media.SoundClip;
 import com.github.hanyaeger.api.scenes.StaticScene;
 import javafx.scene.paint.Color;
 import org.example.Arkanoid;
-import org.example.entities.buttons.QuitButton;
-import org.example.entities.buttons.StartButton;
 import org.example.utils.FontManager;
 
+/**
+ * The level selector scene for choosing game difficulty or level.
+ * <p>
+ * Currently a placeholder for future level selection features.
+ * The {@code arkanoid} field is stored for future scene navigation when levels are implemented.
+ * </p>
+ */
 public class LevelSelector extends StaticScene {
-    private final Arkanoid arkanoid = new Arkanoid();
+    @SuppressWarnings("unused")
+    private final Arkanoid arkanoid;
     private SoundClip backgroundMusic;
 
-    public LevelSelector(Arkanoid arkanoid2) {
-        //TODO Auto-generated constructor stub
+    /**
+     * Creates the level selector scene.
+     *
+     * @param arkanoid the main game instance used for scene transitions
+     */
+    public LevelSelector(Arkanoid arkanoid) {
+        this.arkanoid = arkanoid;
     }
 
     @Override

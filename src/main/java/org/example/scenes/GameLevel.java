@@ -1,16 +1,25 @@
 package org.example.scenes;
 
 import com.github.hanyaeger.api.Coordinate2D;
+import com.github.hanyaeger.api.Timer;
 import com.github.hanyaeger.api.media.SoundClip;
 import com.github.hanyaeger.api.scenes.DynamicScene;
 import javafx.scene.paint.Color;
 import org.example.Arkanoid;
+import org.example.entities.powerups.PowerupConfig;
+import org.example.entities.powerups.PowerupIndicator;
+import org.example.entities.powerups.PowerupType;
 import org.example.entities.objects.Ball;
 import org.example.entities.objects.Brick;
 import org.example.entities.objects.Paddle;
 import org.example.entities.ui.LivesText;
 import org.example.entities.ui.ScoreText;
 import org.example.utils.FileManager;
+
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Iterator;
 
 /**
  * The active gameplay scene containing the paddle, ball, bricks, and HUD.
@@ -28,16 +37,19 @@ public class GameLevel extends DynamicScene {
     private static final int TOTAL_BRICKS = ROWS * COLS;
     private static final int SPEED_UP_EVERY = 6;
     /** Rows with index below this value require two hits to destroy. */
-    private static final int DOUBLE_HIT_ROWS = 2;
+    private static final int DOUBLE_HIT_ROWS = 1;
 
     private final Arkanoid arkanoid;
     private int score = 0;
     private int lives = INITIAL_LIVES;
     private int bricksDestroyed = 0;
     private Ball ball;
+    private Paddle paddle;
     private ScoreText scoreText;
     private LivesText livesText;
     private SoundClip backgroundMusic;
+    private long widePaddleUntilMs = 0;
+    private final Map<PowerupIndicator, Long> indicatorLifetimes = new HashMap<>();
 
     /**
      * Creates the game level and links it to the main game instance.
@@ -71,12 +83,19 @@ public class GameLevel extends DynamicScene {
         livesText = new LivesText(new Coordinate2D(getWidth() - 10, 10), INITIAL_LIVES);
         addEntity(livesText);
 
-        addEntity(new Paddle(new Coordinate2D(getWidth() / 2 - Paddle.WIDTH / 2, getHeight() - 50)));
+        paddle = new Paddle(new Coordinate2D(getWidth() / 2 - Paddle.DEFAULT_WIDTH / 2, getHeight() - 50));
+        addEntity(paddle);
 
         ball = new Ball(new Coordinate2D(getWidth() / 2, getHeight() / 2), this);
         addEntity(ball);
 
         addBricks();
+        getTimers().add(new Timer(100) {
+            @Override
+            public void onAnimationUpdate(long timestamp) {
+                updateTimedPowerups();
+            }
+        });
     }
 
     private void addBricks() {
@@ -97,12 +116,16 @@ public class GameLevel extends DynamicScene {
 
     /**
      * Called by {@link Ball} when a brick is destroyed.
-     * Increases the score, optionally speeds up the ball, and checks for a win.
+     * Increases the score, optionally speeds up the ball, triggers powerup spawning, and checks for a win.
+     *
+     * @param destroyedBrickPosition the location where the brick was destroyed (used for powerup spawning)
      */
-    public void addScore() {
+    public void addScore(Coordinate2D destroyedBrickPosition) {
         score += SCORE_PER_BRICK;
         bricksDestroyed++;
         scoreText.setScore(score);
+
+        maybeSpawnPowerup(destroyedBrickPosition);
 
         if (bricksDestroyed % SPEED_UP_EVERY == 0) {
             ball.increaseSpeed();
@@ -112,6 +135,23 @@ public class GameLevel extends DynamicScene {
             saveTopScore();
             arkanoid.showEndScreen(score, true);
         }
+    }
+
+    private void maybeSpawnPowerup(Coordinate2D brickPosition) {
+        if (ThreadLocalRandom.current().nextDouble() > PowerupConfig.POWERUP_TRIGGER_CHANCE) {
+            return;
+        }
+
+        PowerupType[] types = PowerupType.values();
+        PowerupType type = types[ThreadLocalRandom.current().nextInt(types.length)];
+
+        type.apply(this);
+
+        double indicatorX = brickPosition.getX() + Brick.WIDTH / 2;
+        double indicatorY = brickPosition.getY() + Brick.HEIGHT / 2;
+        PowerupIndicator indicator = new PowerupIndicator(new Coordinate2D(indicatorX, indicatorY), type);
+        addEntity(indicator);
+        indicatorLifetimes.put(indicator, System.currentTimeMillis());
     }
 
     /**
@@ -124,6 +164,51 @@ public class GameLevel extends DynamicScene {
         if (lives <= 0) {
             saveTopScore();
             arkanoid.showEndScreen(score, false);
+        }
+    }
+
+    /**
+     * Adds one life and updates the HUD.
+     */
+    public void addLife() {
+        lives++;
+        livesText.setLives(lives);
+    }
+
+    /**
+     * Activates (or extends) the wide-paddle powerup timer.
+     * If already active, the duration is extended by the powerup duration.
+     */
+    public void activateWidePaddle() {
+        paddle.setWidthKeepingCenter(PowerupConfig.WIDE_PADDLE_WIDTH);
+        long now = System.currentTimeMillis();
+        long baseTime = Math.max(now, widePaddleUntilMs);
+        widePaddleUntilMs = baseTime + PowerupConfig.WIDE_PADDLE_DURATION_MS;
+    }
+
+    /**
+     * Updates timed powerup effects and removes expired indicators.
+     * Called periodically by the scene timer.
+     */
+    private void updateTimedPowerups() {
+        // Update wide-paddle timer
+        if (widePaddleUntilMs == 0) {
+            // No-op if wide paddle is not active
+        } else if (System.currentTimeMillis() >= widePaddleUntilMs) {
+            widePaddleUntilMs = 0;
+            paddle.resetWidth();
+        }
+
+        // Remove expired indicators (1.2 second display duration)
+        final long INDICATOR_DURATION_MS = 1_200;
+        long now = System.currentTimeMillis();
+        Iterator<Map.Entry<PowerupIndicator, Long>> iter = indicatorLifetimes.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry<PowerupIndicator, Long> entry = iter.next();
+            if (now - entry.getValue() >= INDICATOR_DURATION_MS) {
+                entry.getKey().remove();
+                iter.remove();
+            }
         }
     }
 

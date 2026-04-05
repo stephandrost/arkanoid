@@ -23,7 +23,7 @@ public class Paddle extends DynamicRectangleEntity implements KeyListener, Scene
 
     private static final double SPEED = 7.0;
     /** Width of the paddle, also used by {@link Ball} to calculate bounce angles. */
-    public static final double WIDTH = 90;
+    public static final double DEFAULT_WIDTH = 90;
     private static final double HEIGHT = 20;
 
     /**
@@ -32,8 +32,27 @@ public class Paddle extends DynamicRectangleEntity implements KeyListener, Scene
      * @param initialPosition the starting position of the paddle
      */
     public Paddle(Coordinate2D initialPosition) {
-        super(initialPosition, new Size(WIDTH, HEIGHT));
+        super(initialPosition, new Size(DEFAULT_WIDTH, HEIGHT));
         setFill(Color.DODGERBLUE);
+    }
+
+    /**
+     * Resizes the paddle while preserving its center point as much as possible.
+     * Clamps the result so the paddle always remains within horizontal scene bounds.
+     *
+     * @param width the new paddle width
+     */
+    public void setWidthKeepingCenter(double width) {
+        double centerX = getBoundingBox().getMinX() + getWidth() / 2;
+        setWidth(width);
+        double newX = centerX - width / 2;
+        double clampedX = Math.max(1, Math.min(newX, getSceneWidth() - getWidth() - 1));
+        setAnchorLocationX(clampedX);
+    }
+
+    /** Resets the paddle to its default width. */
+    public void resetWidth() {
+        setWidthKeepingCenter(DEFAULT_WIDTH);
     }
 
     /**
@@ -69,6 +88,7 @@ public class Paddle extends DynamicRectangleEntity implements KeyListener, Scene
                 setSpeed(0);
                 setAnchorLocationX(getSceneWidth() - getWidth() - 1);
             }
+            case TOP, BOTTOM -> {} // Paddle only reacts to horizontal borders
         }
     }
 }

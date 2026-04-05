@@ -83,8 +83,10 @@ public class Ball extends DynamicCircleEntity implements SceneBorderTouchingWatc
                 bounceOffPaddle(paddle);
             } else if (collider instanceof Brick brick) {
                 bounceOffBrick(brick);
+                javafx.geometry.Bounds brickBounds = brick.getBoundingBox();
+                Coordinate2D brickPosition = new Coordinate2D(brickBounds.getMinX(), brickBounds.getMinY());
                 if (brick.hit()) {
-                    gameLevel.addScore();
+                    gameLevel.addScore(brickPosition);
                 }
             }
         }
@@ -92,7 +94,7 @@ public class Ball extends DynamicCircleEntity implements SceneBorderTouchingWatc
 
     /**
      * Bounces the ball off a brick based on which side was hit.
-     * Uses Yaeger's getBoundingBox() for accurate AABB collision detection.
+     * Uses AABB collision detection with bounding boxes to determine the bounce direction.
      *
      * @param brick the brick that was hit
      */
@@ -100,20 +102,16 @@ public class Ball extends DynamicCircleEntity implements SceneBorderTouchingWatc
         javafx.geometry.Bounds ballBounds = getBoundingBox();
         javafx.geometry.Bounds brickBounds = brick.getBoundingBox();
 
-        // Calculate overlap on each side using Yaeger's bounding boxes
         double overlapLeft = ballBounds.getCenterX() + RADIUS - brickBounds.getMinX();
         double overlapRight = brickBounds.getMaxX() - (ballBounds.getCenterX() - RADIUS);
         double overlapTop = ballBounds.getCenterY() + RADIUS - brickBounds.getMinY();
         double overlapBottom = brickBounds.getMaxY() - (ballBounds.getCenterY() - RADIUS);
 
-        // Find the smallest overlap to determine which side was hit
         double minOverlap = Math.min(Math.min(overlapLeft, overlapRight), Math.min(overlapTop, overlapBottom));
 
         if (minOverlap == overlapLeft || minOverlap == overlapRight) {
-            // Hit left or right side - invert horizontal direction
             invertSpeedInDirection(Direction.LEFT);
         } else {
-            // Hit top or bottom - invert vertical direction
             invertSpeedInDirection(Direction.UP);
         }
     }
@@ -121,7 +119,6 @@ public class Ball extends DynamicCircleEntity implements SceneBorderTouchingWatc
     /**
      * Calculates the bounce angle based on where the ball hits the paddle.
      * Hitting the left edge deflects sharply left; the right edge deflects sharply right.
-     * Uses Yaeger's getBoundingBox() for accurate collision bounds.
      *
      * @param paddle the paddle that was hit
      */
@@ -135,12 +132,10 @@ public class Ball extends DynamicCircleEntity implements SceneBorderTouchingWatc
         double paddleLeft = paddleBounds.getMinX();
         double paddleRight = paddleBounds.getMaxX();
 
-        // Only bounce if ball is close to paddle top (within a reasonable range)
         if (ballY > paddleY + 30) {
             return;
         }
 
-        // Check horizontal alignment with paddle (with small margin)
         if (ballX < paddleLeft - RADIUS * 1.5 || ballX > paddleRight + RADIUS * 1.5) {
             return;
         }
@@ -148,7 +143,6 @@ public class Ball extends DynamicCircleEntity implements SceneBorderTouchingWatc
         double paddleCenterX = paddleLeft + (paddleRight - paddleLeft) / 2;
         double hit = (ballX - paddleCenterX) / ((paddleRight - paddleLeft) / 2);
         hit = Math.max(-1.0, Math.min(1.0, hit));
-        // 270 = straight up; ±60° gives a range of [210, 330]
         double angle = 270 + hit * 60;
         setMotion(currentSpeed, angle);
     }

@@ -69,11 +69,17 @@ public class Arkanoid extends YaegerGame {
     /**
      * Restarts the menu music and returns to the main menu scene.
      */
+    /**
+     * Restarts the menu music and returns to the main menu scene.
+     */
     public void goToMainMenu() {
         mainMenu.restartMusic();
         setActiveScene(0);
     }
 
+    /**
+     * Navigates to the level selector scene.
+     */
     public void goToLevelSelect() {
         setActiveScene(3);
     }
