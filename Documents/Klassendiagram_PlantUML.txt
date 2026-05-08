@@ -1,0 +1,158 @@
+@startuml
+class YaegerGame{
+    +setupGame()
+    +setupScenes()
+}
+class Arkanoid{
+    - mainMenu : MainMenu
+    +main(String[])
+    +setupGame()
+    +setupScenes()
+    +startgame()
+    +showEndScreen(int, boolean)
+    +goToMainMenu()
+    +goToLevelSelect()
+}
+class MainMenu {
+    #SoundClip : backGroundMusic
+    #TextEntity : topScoreText
+    +setupScene()
+    +stopMusic()
+    +restartMusic()
+    +startMusic()
+    +setupEntities()
+}
+class GameLevel{
+    -int INITIAL_LIVES
+    -int SCORE_PER_BRICK
+    -int ROWS
+    -int COLS
+    -int TOTAL_BRICKS
+    -int SPEED_UP_EVERY
+    -int DOUBLE_HIT_ROWS
+    -int score
+    -int lives
+    -int bricksDestroyed
+    -Ball ball
+    -Paddle paddle
+    -ScoreText scoreText
+    -LivesText livesText
+    -SoundClip backgroundMusic
+    -long widePaddleUntilMs
+    +setupScene()
+    +setupEntities()
+    +loseLife()
+    +addLife()   
+    +activateWidePaddle()
+  
+}
+class Ball{
+    -double RADIUS
+    -double INITIAL_SPEED
+    -double MAX_SPEED
+    +increaseSpeed()
+    +notifyBoundaryTouching()
+    +onCollision()
+    +bounceOffBrick()
+    +bounceOffPaddle()
+}
+class Brick{
+    -double WIDTH
+    -double HEIGHT
+    -int hitsLeft
+    +boolean hit()
+}
+class Paddle{
+    -double SPEED
+    -double DEFAULT_WIDTH
+    -double HEIGHT
+    +setWidthKeepingCenter()
+    +public void resetWidth()
+    +onPressedKeysChange()
+    +notifyBoundaryTouching()
+
+}
+class LevelSelector{
+    +setupScene()
+    +stopMusic()
+    +restartMusic()
+    +startMusic()
+    +setupEntities()
+}
+class GameOverScene{
+    -boolean isWin
+    -int score
+    +GameOverScene()
+    +setupScene()
+    +setupEntities()
+}
+class GameText{
+    -position
+    -text
+}
+
+class ScoreText{
+    -ScoreText
+    +setScore()
+}
+class LivesText{
+    +setLives()
+}
+class Button{
+    -location
+    -text
+    -fontSize
+    -defaultColor
+    -hoverColor
+    +onMouseEntered()
+    +onMouseExited()
+}
+class backToMenuButton{
+    
+}
+class QuitButton{
+    
+}
+class StartButton{
+    
+}
+class SelectLevelButton{
+    
+}
+class Powerup{
+    -double WIDTH
+    -double HEIGHT
+    -double FALL_SPEED
+    +onCollision()
+    +notifyBoundraryCrossing()
+}
+
+class PowerupType{
+    +WIDER_PADDLE()
+    +EXTRA_LIFE()
+}
+
+
+YaegerGame --> Arkanoid
+Arkanoid --> GameLevel : uses
+Arkanoid --> MainMenu : uses
+Arkanoid --> LevelSelector : uses
+Arkanoid --> GameOverScene : uses
+Arkanoid --> LivesText : uses
+Arkanoid --> ScoreText : uses
+ScoreText --> GameText : uses
+LivesText --> GameText : uses
+GameLevel --> Ball : uses
+GameLevel --> Brick : uses
+GameLevel --> Paddle : uses
+backToMenuButton --> Button : uses
+QuitButton --> Button : uses
+StartButton--> Button : uses
+SelectLevelButton--> Button : uses
+GameLevel --> Powerup
+Powerup --> PowerupType
+MainMenu --> QuitButton : uses
+MainMenu --> StartButton : uses
+MainMenu --> SelectLevelButton : uses
+LevelSelector --> backToMenuButton : uses
+@enduml
