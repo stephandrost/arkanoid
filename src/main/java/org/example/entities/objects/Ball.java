@@ -4,6 +4,7 @@ import com.github.hanyaeger.api.Coordinate2D;
 import com.github.hanyaeger.api.entities.Collider;
 import com.github.hanyaeger.api.entities.Collided;
 import com.github.hanyaeger.api.entities.Direction;
+import com.github.hanyaeger.api.entities.YaegerEntity;
 import com.github.hanyaeger.api.entities.SceneBorderTouchingWatcher;
 import com.github.hanyaeger.api.entities.impl.DynamicCircleEntity;
 import com.github.hanyaeger.api.scenes.SceneBorder;
@@ -72,7 +73,7 @@ public class Ball extends DynamicCircleEntity implements SceneBorderTouchingWatc
 
     /**
      * Handles collisions with the paddle and bricks.
-     * Deflects off the paddle based on hit position; bounces off bricks based on which side was hit.
+        * Uses Yaeger vector helpers to reflect the ball off colliders.
      *
      * @param collidingObjects the list of objects the ball collided with this frame
      */
@@ -83,9 +84,9 @@ public class Ball extends DynamicCircleEntity implements SceneBorderTouchingWatc
                 bounceOffPaddle(paddle);
             } else if (collider instanceof Brick brick) {
                 bounceOffBrick(brick);
-                javafx.geometry.Bounds brickBounds = brick.getBoundingBox();
-                Coordinate2D brickPosition = new Coordinate2D(brickBounds.getMinX(), brickBounds.getMinY());
                 if (brick.hit()) {
+                    javafx.geometry.Bounds brickBounds = brick.getBoundingBox();
+                    Coordinate2D brickPosition = new Coordinate2D(brickBounds.getMinX(), brickBounds.getMinY());
                     gameLevel.addScore(brickPosition);
                 }
             }
@@ -93,57 +94,29 @@ public class Ball extends DynamicCircleEntity implements SceneBorderTouchingWatc
     }
 
     /**
-     * Bounces the ball off a brick based on which side was hit.
-     * Uses AABB collision detection with bounding boxes to determine the bounce direction.
+        * Bounces the ball off a brick using vector reflection.
      *
      * @param brick the brick that was hit
      */
     private void bounceOffBrick(Brick brick) {
-        javafx.geometry.Bounds ballBounds = getBoundingBox();
-        javafx.geometry.Bounds brickBounds = brick.getBoundingBox();
-
-        double overlapLeft = ballBounds.getCenterX() + RADIUS - brickBounds.getMinX();
-        double overlapRight = brickBounds.getMaxX() - (ballBounds.getCenterX() - RADIUS);
-        double overlapTop = ballBounds.getCenterY() + RADIUS - brickBounds.getMinY();
-        double overlapBottom = brickBounds.getMaxY() - (ballBounds.getCenterY() - RADIUS);
-
-        double minOverlap = Math.min(Math.min(overlapLeft, overlapRight), Math.min(overlapTop, overlapBottom));
-
-        if (minOverlap == overlapLeft || minOverlap == overlapRight) {
-            invertSpeedInDirection(Direction.LEFT);
-        } else {
-            invertSpeedInDirection(Direction.UP);
+        if (brick instanceof YaegerEntity entity) {
+            invertSpeedInDirection(angleTo(entity));
         }
     }
 
     /**
-     * Calculates the bounce angle based on where the ball hits the paddle.
-     * Hitting the left edge deflects sharply left; the right edge deflects sharply right.
+        * Bounces the ball off the paddle while enforcing enough upward motion.
      *
      * @param paddle the paddle that was hit
      */
     private void bounceOffPaddle(Paddle paddle) {
-        javafx.geometry.Bounds ballBounds = getBoundingBox();
-        javafx.geometry.Bounds paddleBounds = paddle.getBoundingBox();
-
-        double ballY = ballBounds.getCenterY();
-        double paddleY = paddleBounds.getMinY();
-        double ballX = ballBounds.getCenterX();
-        double paddleLeft = paddleBounds.getMinX();
-        double paddleRight = paddleBounds.getMaxX();
-
-        if (ballY > paddleY + 30) {
+        if (getSpeedInDirection(Direction.DOWN) <= 0) {
             return;
         }
 
-        if (ballX < paddleLeft - RADIUS * 1.5 || ballX > paddleRight + RADIUS * 1.5) {
-            return;
+        if (paddle instanceof YaegerEntity entity) {
+            invertSpeedInDirection(angleTo(entity));
+            maximizeMotionInDirection(Direction.UP, currentSpeed * 0.55);
         }
-
-        double paddleCenterX = paddleLeft + (paddleRight - paddleLeft) / 2;
-        double hit = (ballX - paddleCenterX) / ((paddleRight - paddleLeft) / 2);
-        hit = Math.max(-1.0, Math.min(1.0, hit));
-        double angle = 270 + hit * 60;
-        setMotion(currentSpeed, angle);
     }
 }

@@ -47,12 +47,9 @@ public class Powerup extends DynamicRectangleEntity implements Collided, SceneBo
 
     @Override
     public void onCollision(List<Collider> collidingObjects) {
-        for (Collider collider : collidingObjects) {
-            if (collider instanceof Paddle) {
-                type.apply(gameLevel);
-                remove();
-                return;
-            }
+        if (collidingObjects.stream().anyMatch(Paddle.class::isInstance)) {
+            type.apply(gameLevel);
+            remove();
         }
     }
 }
