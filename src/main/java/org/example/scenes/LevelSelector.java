@@ -43,18 +43,20 @@ public class LevelSelector extends StaticScene {
         }
     }
 
-    /** Restarts the background music and refreshes the displayed top score. */
+    /** Restarts the background music. */
     public void restartMusic() {
         stopMusic();
         startMusic();
     }
 
+    /** Starts the main menu background music. */
     private void startMusic() {
         backgroundMusic = new SoundClip("audio/main-menu.mp3");
         backgroundMusic.setVolume(0.5);
         backgroundMusic.play();
     }
 
+    /** Creates and adds all menu entities to the scene. */
     @Override
     public void setupEntities() {
         var title = new TextEntity(new Coordinate2D(getWidth() / 2, 150), "ARKANOID");
@@ -64,5 +66,4 @@ public class LevelSelector extends StaticScene {
         addEntity(title);
 
     }
-
 }
