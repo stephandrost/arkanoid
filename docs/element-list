@@ -1,7 +1,7 @@
 org.example
 org.example.entities.buttons
 org.example.entities.objects
-org.example.entities.powerups
+org.example.entities.objects.powerups
 org.example.entities.ui
 org.example.scenes
 org.example.utils
