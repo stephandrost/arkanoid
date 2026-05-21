@@ -6,20 +6,17 @@ import com.github.hanyaeger.api.media.SoundClip;
 import com.github.hanyaeger.api.scenes.DynamicScene;
 import javafx.scene.paint.Color;
 import org.example.Arkanoid;
-import org.example.entities.powerups.PowerupConfig;
-import org.example.entities.powerups.PowerupIndicator;
-import org.example.entities.powerups.PowerupType;
 import org.example.entities.objects.Ball;
 import org.example.entities.objects.Brick;
 import org.example.entities.objects.Paddle;
+import org.example.entities.objects.powerups.ExtraLifePowerup;
+import org.example.entities.objects.powerups.Powerup;
+import org.example.entities.objects.powerups.WiderPaddlePowerup;
 import org.example.entities.ui.LivesText;
 import org.example.entities.ui.ScoreText;
 import org.example.utils.FileManager;
 
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Iterator;
 
 /**
  * The active gameplay scene containing the paddle, ball, bricks, and HUD.
@@ -36,6 +33,7 @@ public class GameLevel extends DynamicScene {
     private static final int COLS = 8;
     private static final int TOTAL_BRICKS = ROWS * COLS;
     private static final int SPEED_UP_EVERY = 6;
+    private static final double POWERUP_TRIGGER_CHANCE = 0.03;
     /** Rows with index below this value require two hits to destroy. */
     private static final int DOUBLE_HIT_ROWS = 1;
 
@@ -49,7 +47,6 @@ public class GameLevel extends DynamicScene {
     private LivesText livesText;
     private SoundClip backgroundMusic;
     private long widePaddleUntilMs = 0;
-    private final Map<PowerupIndicator, Long> indicatorLifetimes = new HashMap<>();
 
     /**
      * Creates the game level and links it to the main game instance.
@@ -138,20 +135,21 @@ public class GameLevel extends DynamicScene {
     }
 
     private void maybeSpawnPowerup(Coordinate2D brickPosition) {
-        if (ThreadLocalRandom.current().nextDouble() > PowerupConfig.POWERUP_TRIGGER_CHANCE) {
+        if (ThreadLocalRandom.current().nextDouble() > POWERUP_TRIGGER_CHANCE) {
             return;
         }
 
-        PowerupType[] types = PowerupType.values();
-        PowerupType type = types[ThreadLocalRandom.current().nextInt(types.length)];
+        Powerup powerup = ThreadLocalRandom.current().nextBoolean()
+                ? new WiderPaddlePowerup(centerPosition(brickPosition), this)
+                : new ExtraLifePowerup(centerPosition(brickPosition), this);
+        addEntity(powerup);
+    }
 
-        type.apply(this);
+    private Coordinate2D centerPosition(Coordinate2D brickPosition) {
+        double powerupX = brickPosition.getX() + Brick.WIDTH / 2 - Powerup.WIDTH / 2;
+        double powerupY = brickPosition.getY() + Brick.HEIGHT / 2 - Powerup.HEIGHT / 2;
 
-        double indicatorX = brickPosition.getX() + Brick.WIDTH / 2;
-        double indicatorY = brickPosition.getY() + Brick.HEIGHT / 2;
-        PowerupIndicator indicator = new PowerupIndicator(new Coordinate2D(indicatorX, indicatorY), type);
-        addEntity(indicator);
-        indicatorLifetimes.put(indicator, System.currentTimeMillis());
+        return new Coordinate2D(powerupX, powerupY);
     }
 
     /**
@@ -161,6 +159,7 @@ public class GameLevel extends DynamicScene {
     public void loseLife() {
         lives--;
         livesText.setLives(lives);
+
         if (lives <= 0) {
             saveTopScore();
             arkanoid.showEndScreen(score, false);
@@ -180,40 +179,26 @@ public class GameLevel extends DynamicScene {
      * If already active, the duration is extended by the powerup duration.
      */
     public void activateWidePaddle() {
-        paddle.setWidthKeepingCenter(PowerupConfig.WIDE_PADDLE_WIDTH);
+        paddle.setWidthKeepingCenter(WiderPaddlePowerup.PADDLE_WIDTH);
         long now = System.currentTimeMillis();
         long baseTime = Math.max(now, widePaddleUntilMs);
-        widePaddleUntilMs = baseTime + PowerupConfig.WIDE_PADDLE_DURATION_MS;
+        widePaddleUntilMs = baseTime + WiderPaddlePowerup.DURATION_MS;
     }
 
     /**
-     * Updates timed powerup effects and removes expired indicators.
+     * Updates timed powerup effects.
      * Called periodically by the scene timer.
      */
     private void updateTimedPowerups() {
-        // Update wide-paddle timer
-        if (widePaddleUntilMs == 0) {
-            // No-op if wide paddle is not active
-        } else if (System.currentTimeMillis() >= widePaddleUntilMs) {
+        if (widePaddleUntilMs != 0 && System.currentTimeMillis() >= widePaddleUntilMs) {
             widePaddleUntilMs = 0;
             paddle.resetWidth();
-        }
-
-        // Remove expired indicators (1.2 second display duration)
-        final long INDICATOR_DURATION_MS = 1_200;
-        long now = System.currentTimeMillis();
-        Iterator<Map.Entry<PowerupIndicator, Long>> iter = indicatorLifetimes.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry<PowerupIndicator, Long> entry = iter.next();
-            if (now - entry.getValue() >= INDICATOR_DURATION_MS) {
-                entry.getKey().remove();
-                iter.remove();
-            }
         }
     }
 
     private void saveTopScore() {
         int topScore = Integer.parseInt(FileManager.read("topScore", "0"));
+
         if (score > topScore) {
             FileManager.write("topScore", String.valueOf(score));
         }
