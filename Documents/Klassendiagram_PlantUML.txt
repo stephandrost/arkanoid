@@ -1,8 +1,10 @@
 @startuml
+
 class YaegerGame{
     +setupGame()
     +setupScenes()
 }
+
 class Arkanoid{
     - mainMenu : MainMenu
     +main(String[])
@@ -13,6 +15,7 @@ class Arkanoid{
     +goToMainMenu()
     +goToLevelSelect()
 }
+
 class MainMenu {
     #SoundClip : backGroundMusic
     #TextEntity : topScoreText
@@ -22,6 +25,7 @@ class MainMenu {
     +startMusic()
     +setupEntities()
 }
+
 class GameLevel{
     -int INITIAL_LIVES
     -int SCORE_PER_BRICK
@@ -39,13 +43,14 @@ class GameLevel{
     -LivesText livesText
     -SoundClip backgroundMusic
     -long widePaddleUntilMs
+
     +setupScene()
     +setupEntities()
     +loseLife()
     +addLife()   
     +activateWidePaddle()
-  
 }
+
 class Ball{
     -double RADIUS
     -double INITIAL_SPEED
@@ -56,22 +61,24 @@ class Ball{
     +bounceOffBrick()
     +bounceOffPaddle()
 }
+
 class Brick{
     -double WIDTH
     -double HEIGHT
     -int hitsLeft
     +boolean hit()
 }
+
 class Paddle{
     -double SPEED
     -double DEFAULT_WIDTH
     -double HEIGHT
     +setWidthKeepingCenter()
-    +public void resetWidth()
+    +resetWidth()
     +onPressedKeysChange()
     +notifyBoundaryTouching()
-
 }
+
 class LevelSelector{
     +setupScene()
     +stopMusic()
@@ -79,6 +86,7 @@ class LevelSelector{
     +startMusic()
     +setupEntities()
 }
+
 class GameOverScene{
     -boolean isWin
     -int score
@@ -86,18 +94,20 @@ class GameOverScene{
     +setupScene()
     +setupEntities()
 }
+
 class GameText{
     -position
     -text
 }
 
 class ScoreText{
-    -ScoreText
     +setScore()
 }
+
 class LivesText{
     +setLives()
 }
+
 class Button{
     -location
     -text
@@ -107,18 +117,12 @@ class Button{
     +onMouseEntered()
     +onMouseExited()
 }
-class backToMenuButton{
-    
-}
-class QuitButton{
-    
-}
-class StartButton{
-    
-}
-class SelectLevelButton{
-    
-}
+
+class backToMenuButton
+class QuitButton
+class StartButton
+class SelectLevelButton
+
 class Powerup{
     -double WIDTH
     -double HEIGHT
@@ -127,32 +131,30 @@ class Powerup{
     +notifyBoundraryCrossing()
 }
 
-class PowerupType{
-    +WIDER_PADDLE()
-    +EXTRA_LIFE()
-}
+class ExtraLifePowerup
+class WidePaddlePowerup
 
+Arkanoid --|> YaegerGame
+ScoreText --|> GameText
+LivesText --|> GameText
+backToMenuButton --|> Button
+QuitButton --|> Button
+SelectLevelButton --|> Button
+StartButton --|> Button
+ExtraLifePowerup --|> Powerup
+WidePaddlePowerup --|> Powerup
+Arkanoid --> MainMenu
+Arkanoid --> GameLevel
+Arkanoid --> LevelSelector
+Arkanoid --> GameOverScene
+GameLevel *-- Ball
+GameLevel *-- Paddle
+GameLevel *-- ScoreText
+GameLevel *-- LivesText
+GameLevel *-- Brick
+GameLevel *-- Powerup
+Ball --> Brick
+Ball --> Paddle
+LevelSelector --> backToMenuButton
 
-YaegerGame --> Arkanoid
-Arkanoid --> GameLevel : uses
-Arkanoid --> MainMenu : uses
-Arkanoid --> LevelSelector : uses
-Arkanoid --> GameOverScene : uses
-Arkanoid --> LivesText : uses
-Arkanoid --> ScoreText : uses
-ScoreText --> GameText : uses
-LivesText --> GameText : uses
-GameLevel --> Ball : uses
-GameLevel --> Brick : uses
-GameLevel --> Paddle : uses
-backToMenuButton --> Button : uses
-QuitButton --> Button : uses
-StartButton--> Button : uses
-SelectLevelButton--> Button : uses
-GameLevel --> Powerup
-Powerup --> PowerupType
-MainMenu --> QuitButton : uses
-MainMenu --> StartButton : uses
-MainMenu --> SelectLevelButton : uses
-LevelSelector --> backToMenuButton : uses
 @enduml
