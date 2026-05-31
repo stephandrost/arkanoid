@@ -1,160 +1,210 @@
 @startuml
 
-class YaegerGame{
-    +setupGame()
-    +setupScenes()
-}
+skinparam classAttributeIconSize 0
 
-class Arkanoid{
-    - mainMenu : MainMenu
+class Arkanoid {
+    -mainMenu : MainMenu
     +main(String[])
     +setupGame()
     +setupScenes()
-    +startgame()
+    +startGame()
     +showEndScreen(int, boolean)
     +goToMainMenu()
     +goToLevelSelect()
 }
 
 class MainMenu {
-    #SoundClip : backGroundMusic
-    #TextEntity : topScoreText
+    -arkanoid : Arkanoid
+    -backgroundMusic : SoundClip
+    -topScoreText : TextEntity
+    +MainMenu(Arkanoid)
     +setupScene()
     +stopMusic()
     +restartMusic()
-    +startMusic()
     +setupEntities()
+    -startMusic()
 }
 
-class GameLevel{
-    -int INITIAL_LIVES
-    -int SCORE_PER_BRICK
-    -int ROWS
-    -int COLS
-    -int TOTAL_BRICKS
-    -int SPEED_UP_EVERY
-    -int DOUBLE_HIT_ROWS
-    -int score
-    -int lives
-    -int bricksDestroyed
-    -Ball ball
-    -Paddle paddle
-    -ScoreText scoreText
-    -LivesText livesText
-    -SoundClip backgroundMusic
-    -long widePaddleUntilMs
-
+class GameLevel {
+    -arkanoid : Arkanoid
+    -INITIAL_LIVES : int
+    -SCORE_PER_BRICK : int
+    -ROWS : int
+    -COLS : int
+    -TOTAL_BRICKS : int
+    -SPEED_UP_EVERY : int
+    -POWERUP_TRIGGER_CHANCE : double
+    -DOUBLE_HIT_ROWS : int
+    -score : int
+    -lives : int
+    -bricksDestroyed : int
+    -ball : Ball
+    -paddle : Paddle
+    -scoreText : ScoreText
+    -livesText : LivesText
+    -backgroundMusic : SoundClip
+    -widePaddleUntilMs : long
+    +GameLevel(Arkanoid)
     +setupScene()
     +setupEntities()
+    +addScore(Coordinate2D)
     +loseLife()
-    +addLife()   
+    +addLife()
     +activateWidePaddle()
+    -addBricks()
+    -maybeSpawnPowerup(Coordinate2D)
+    -centerPosition(Coordinate2D)
+    -updateTimedPowerups()
+    -saveTopScore()
+    -startMusic()
 }
 
-class Ball{
-    -double RADIUS
-    -double INITIAL_SPEED
-    -double MAX_SPEED
-    +increaseSpeed()
-    +notifyBoundaryTouching()
-    +onCollision()
-    +bounceOffBrick()
-    +bounceOffPaddle()
-}
-
-class Brick{
-    -double WIDTH
-    -double HEIGHT
-    -int hitsLeft
-    +boolean hit()
-}
-
-class Paddle{
-    -double SPEED
-    -double DEFAULT_WIDTH
-    -double HEIGHT
-    +setWidthKeepingCenter()
-    +resetWidth()
-    +onPressedKeysChange()
-    +notifyBoundaryTouching()
-}
-
-class LevelSelector{
+class LevelSelector {
+    -arkanoid : Arkanoid
+    -backgroundMusic : SoundClip
+    +LevelSelector(Arkanoid)
     +setupScene()
     +stopMusic()
     +restartMusic()
-    +startMusic()
     +setupEntities()
+    -startMusic()
 }
 
-class GameOverScene{
-    -boolean isWin
-    -int score
-    +GameOverScene()
+class GameOverScene {
+    -arkanoid : Arkanoid
+    -isWin : boolean
+    -score : int
+    +GameOverScene(Arkanoid, boolean, int)
     +setupScene()
     +setupEntities()
 }
 
-class GameText{
-    -position
-    -text
+class Ball {
+    -RADIUS : double
+    -INITIAL_SPEED : double
+    -MAX_SPEED : double
+    -currentSpeed : double
+    -gameLevel : GameLevel
+    +Ball(Coordinate2D, GameLevel)
+    +increaseSpeed()
+    +notifyBoundaryTouching(SceneBorder)
+    +onCollision(List<Collider>)
+    -bounceOffBrick(Brick)
+    -bounceOffPaddle(Paddle)
 }
 
-class ScoreText{
-    +setScore()
+class Brick {
+    -WIDTH : double
+    -HEIGHT : double
+    -hitsLeft : int
+    -damagedColor : Color
+    +Brick(Coordinate2D, Color, int)
+    +hit() : boolean
 }
 
-class LivesText{
-    +setLives()
+class Paddle {
+    -SPEED : double
+    -DEFAULT_WIDTH : double
+    -HEIGHT : double
+    +Paddle(Coordinate2D)
+    +setWidthKeepingCenter(double)
+    +resetWidth()
+    +onPressedKeysChange(Set<KeyCode>)
+    +notifyBoundaryTouching(SceneBorder)
 }
 
-class Button{
-    -location
-    -text
-    -fontSize
-    -defaultColor
-    -hoverColor
+abstract class GameText {
+    +GameText(Coordinate2D, String)
+}
+
+class ScoreText {
+    +setScore(int)
+}
+
+class LivesText {
+    +setLives(int)
+}
+
+abstract class Button {
+    -defaultColor : Color
+    -hoverColor : Color
+    #Button(Coordinate2D, String, double, Color, Color)
     +onMouseEntered()
     +onMouseExited()
 }
 
-class backToMenuButton
-class QuitButton
-class StartButton
-class SelectLevelButton
-
-class Powerup{
-    -double WIDTH
-    -double HEIGHT
-    -double FALL_SPEED
-    +onCollision()
-    +notifyBoundraryCrossing()
+class StartButton {
+    -arkanoid : Arkanoid
+    +StartButton(Coordinate2D, Arkanoid)
+    +onMouseButtonPressed(MouseButton, Coordinate2D)
+}
+class SelectLevelButton {
+    -arkanoid : Arkanoid
+    +SelectLevelButton(Coordinate2D, Arkanoid)
+    +onMouseButtonPressed(MouseButton, Coordinate2D)
+}
+class QuitButton {
+    +QuitButton(Coordinate2D)
+    +onMouseButtonPressed(MouseButton, Coordinate2D)
+}
+class BackToMenuButton {
+    -arkanoid : Arkanoid
+    +BackToMenuButton(Coordinate2D, Arkanoid)
+    +onMouseButtonPressed(MouseButton, Coordinate2D)
 }
 
-class ExtraLifePowerup
-class WidePaddlePowerup
+abstract class Powerup {
+    +WIDTH : double
+    +HEIGHT : double
+    -FALL_SPEED : double
+    -gameLevel : GameLevel
+    #Powerup(Coordinate2D, GameLevel, Color)
+    +onCollision(List<Collider>)
+    +notifyBoundaryCrossing(SceneBorder)
+    #applyEffect()
+    #getGameLevel() : GameLevel
+}
 
-Arkanoid --|> YaegerGame
-ScoreText --|> GameText
-LivesText --|> GameText
-backToMenuButton --|> Button
-QuitButton --|> Button
-SelectLevelButton --|> Button
-StartButton --|> Button
-ExtraLifePowerup --|> Powerup
-WidePaddlePowerup --|> Powerup
-Arkanoid --> MainMenu
-Arkanoid --> GameLevel
-Arkanoid --> LevelSelector
-Arkanoid --> GameOverScene
+class WiderPaddlePowerup {
+    +COLOR : Color
+    +PADDLE_WIDTH : double
+    +DURATION_MS : long
+    +WiderPaddlePowerup(Coordinate2D, GameLevel)
+    #applyEffect()
+}
+
+class ExtraLifePowerup {
+    +COLOR : Color
+    +ExtraLifePowerup(Coordinate2D, GameLevel)
+    #applyEffect()
+}
+
+Arkanoid *-- MainMenu
+Arkanoid *-- GameLevel
+Arkanoid *-- LevelSelector
+Arkanoid *-- GameOverScene
+
+MainMenu *-- StartButton
+MainMenu *-- SelectLevelButton
+MainMenu *-- QuitButton
+
+GameOverScene *-- BackToMenuButton
+
 GameLevel *-- Ball
 GameLevel *-- Paddle
+GameLevel *-- Brick
 GameLevel *-- ScoreText
 GameLevel *-- LivesText
-GameLevel *-- Brick
 GameLevel *-- Powerup
-Ball --> Brick
-Ball --> Paddle
-LevelSelector --> backToMenuButton
 
+ScoreText --|> GameText
+LivesText --|> GameText
+
+StartButton --|> Button
+SelectLevelButton --|> Button
+QuitButton --|> Button
+BackToMenuButton --|> Button
+
+WiderPaddlePowerup --|> Powerup
+ExtraLifePowerup --|> Powerup
 @enduml
